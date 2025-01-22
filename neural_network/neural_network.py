@@ -1,9 +1,16 @@
+import pickle
+
 from neural_network.layers.layer import Layer
 import numpy as np
 
 class NeuralNetwork:
     def __init__(self):
+        super().__init__()
         self.layers = []
+        self.encoder = None
+
+    def add_encoder(self, encoder):
+        self.encoder = encoder
 
     def add_layer(self, input_size, output_size, activation_function):
         layer = Layer(input_size, output_size, activation_function)

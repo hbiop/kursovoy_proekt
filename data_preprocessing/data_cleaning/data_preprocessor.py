@@ -1,18 +1,27 @@
+import numpy as np
 import pandas as pd
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 from sklearn.model_selection import train_test_split
+from PyQt5.QtCore import pyqtSignal, QObject
 
-class DataPreprocessor:
+class DataPreprocessor(QObject):
+    data_signal: pyqtSignal = pyqtSignal(str)
     def __init__(self):
+        super().__init__()
         self.cleaning_nullable_values: str = "delete"
         self.data : pd.DataFrame = pd.DataFrame()
         self.Y : pd.DataFrame = pd.DataFrame()
-        self.column_for_prediction = 0
+        self.column_for_prediction = None
+        self.labels_values = dict()
 
     def read_data(self, url):
-        data : pd.DataFrame = pd.read_csv(url)
-        self.data = data.drop(['NObeyesdad'], axis=1)
-        self.Y = data['NObeyesdad']
+        self.data : pd.DataFrame = pd.read_csv(url)
+
+    def set_column_for_prediction(self, value):
+        self.column_for_prediction = value
+        data = self.data
+        self.data = data.drop([self.column_for_prediction], axis=1)
+        self.Y = data[self.column_for_prediction]
 
     def print_data(self):
         print(self.data)
@@ -20,19 +29,9 @@ class DataPreprocessor:
     def get_data(self):
         return self.data
 
-    def delete_duplicates(self):
-        self.data = self.data.drop_duplicates(inplace=True)
-
-    def clear_nullable_values(self):
-        match self.cleaning_nullable_values:
-            case "delete":
-                self.data = self.data.dropna()
-            case "fill":
-                self.data = self.data.fillna(0)
-
     def fill_missing_values(self):
         if hasattr(self, 'data'):
-            self.data.fillna(self.data.mean(), inplace=True)  # Заполнение средним значением
+            self.data.fillna(self.data.mean(), inplace=True)
 
     def normalize_data(self):
         if hasattr(self, 'data'):
@@ -45,6 +44,7 @@ class DataPreprocessor:
         self.encode_categorical_variables()
         self.fill_missing_values()
         self.normalize_data()
+        self.data_signal.emit("")
 
     def encode_categorical_variables(self):
         if hasattr(self, 'data'):
@@ -56,7 +56,6 @@ class DataPreprocessor:
 
     def drop_columns(self, column_name : str):
         if hasattr(self, 'data'):
-            columns = self.data.columns
             self.data.drop(columns=column_name, inplace=True, errors='ignore')
 
     def split_data(self):

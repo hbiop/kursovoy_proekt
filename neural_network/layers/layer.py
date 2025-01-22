@@ -3,6 +3,7 @@ from neural_network.activation_functions.sigmoid import SigmoidFunction
 
 class Layer:
     def __init__(self, input_size, output_size, activation_function):
+        self.input_size = input_size
         self.weights = np.random.randn(input_size, output_size)
         self.biases = np.zeros((1, output_size))
         if activation_function == "sigmoid":
